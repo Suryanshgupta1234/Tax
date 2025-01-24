@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tax Evaluation & Citizen Advice</title>
+  <link rel="icon" href="icon.png" type="image/png">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+    }
+    nav {
+      background: #007bff;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 10px;
+      font-size: 16px;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    select, input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      color: #fff;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .result, .about, .uses {
+      margin-top: 20px;
+      padding: 10px;
+      background: #e9f7e9;
+      color: #2e7d32;
+      border-radius: 4px;
+      display: none;
+    }
+    canvas {
+      margin-top: 20px;
+    }
+    textarea {
+      height: 100px;
+    }
+    footer {
+      text-align: center;
+      margin-top: 20px;
+      padding: 10px;
+      background: #f4f4f4;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <div>
+      <strong>Tax Evaluation System</strong>
+    </div>
+    <div>
+      <a href="#about">About</a>
+      <a href="#uses">Uses</a>
+      <a href="#advice">Citizen Advice</a>
+      <a href="#calculator">Tax Calculator</a>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="container" id="main-content">
+    <h1>Tax Evaluation System</h1>
+    <h2>Evaluate Tax and GDP Impact</h2>
+
+    <!-- Tax Evaluation Form -->
+    <div class="form-group">
+      <label for="itemName">Enter Product/Service Name:</label>
+      <input type="text" id="itemName" placeholder="e.g., Bread, Luxury Car, Cigarettes" required>
+
+      <label for="category">Select Product Category:</label>
+      <select id="category">
+        <option value="essential">Essential Goods</option>
+        <option value="luxury">Luxury Goods</option>
+        <option value="harmful">Harmful Products</option>
+        <option value="neutral">Neutral Goods</option>
+        <option value="services">Services</option>
+      </select>
+
+      <button onclick="evaluateTax()">Evaluate Tax Recommendation</button>
+      <div class="result" id="evaluationResult"></div>
+    </div>
+
+    <!-- Graph Visualization -->
+    <h2>GDP Growth and Tax Visualization</h2>
+    <canvas id="gdpChart"></canvas>
+  </div>
+
+  <!-- Citizen Tax Calculator -->
+  <div class="container" id="calculator">
+    <h2>Citizen Tax Calculator</h2>
+    <p>Calculate the tax you owe based on your annual income:</p>
+    <div class="form-group">
+      <label for="income">Enter Your Annual Income (INR):</label>
+      <input type="number" id="income" placeholder="e.g., 500000" required>
+
+      <label for="taxSlab">Select Tax Slab:</label>
+      <select id="taxSlab">
+        <option value="0">No Tax (Income up to ₹2,50,000)</option>
+        <option value="5">5% (₹2,50,001 - ₹5,00,000)</option>
+        <option value="10">10% (₹5,00,001 - ₹7,50,000)</option>
+        <option value="15">15% (₹7,50,001 - ₹10,00,000)</option>
+        <option value="20">20% (₹10,00,001 - ₹12,50,000)</option>
+        <option value="30">30% (Above ₹12,50,000)</option>
+      </select>
+
+      <button onclick="calculateTax()">Calculate Tax</button>
+      <div class="result" id="taxResult"></div>
+    </div>
+  </div>
+
+  <!-- Citizen Advice Section -->
+  <div class="container" id="advice">
+    <h2>Citizen Advice</h2>
+    <p>We value the opinions of our citizens. Please share your suggestions to help us improve our tax system.</p>
+    <div class="form-group">
+      <label for="citizenName">Your Name:</label>
+      <input type="text" id="citizenName" placeholder="Enter your name" required>
+
+      <label for="adviceText">Your Advice:</label>
+      <textarea id="adviceText" placeholder="Enter your advice here..." required></textarea>
+
+      <button onclick="submitAdvice()">Submit Advice</button>
+      <div class="result" id="adviceResult" style="display:none;">Thank you for your feedback!</div>
+    </div>
+  </div>
+
+  
+
+  <script>
+    // Chart Initialization
+    const gdpData = {
+      labels: ["Essential Goods", "Luxury Goods", "Harmful Products", "Neutral Goods", "Services"],
+      datasets: [
+        {
+          label: "Contribution to GDP (%)",
+          data: [30, 15, 10, 25, 20],
+          backgroundColor: ["#4caf50", "#ff9800", "#f44336", "#2196f3", "#9c27b0"],
+        },
+        {
+          label: "Recommended Tax (%)",
+          data: [5, 30, 50, 18, 12],
+          backgroundColor: ["rgba(76, 175, 80, 0.7)", "rgba(255, 152, 0, 0.7)", "rgba(244, 67, 54, 0.7)", "rgba(33, 150, 243, 0.7)", "rgba(156, 39, 176, 0.7)"],
+        },
+      ],
+    };
+
+    const ctx = document.getElementById("gdpChart").getContext("2d");
+    const gdpChart = new Chart(ctx, {
+      type: "bar",
+      data: gdpData,
+      options: { responsive: true, scales: { y: { beginAtZero: true, max: 60 } } },
+    });
+
+    // Evaluate Tax
+    function evaluateTax() {
+      const itemName = document.getElementById("itemName").value;
+      const category = document.getElementById("category").value;
+
+      let recommendation = "";
+      if (category === "essential") recommendation = "Minimal tax (5%) recommended.";
+      else if (category === "luxury") recommendation = "High tax (30%) recommended.";
+      else if (category === "harmful") recommendation = "Very high tax (50%) recommended.";
+      else recommendation = "Moderate tax (18%) recommended.";
+
+      document.getElementById("evaluationResult").style.display = "block";
+      document.getElementById("evaluationResult").textContent = `For ${itemName}: ${recommendation}`;
+    }
+
+    // Calculate Tax for Citizens
+    function calculateTax() {
+      const income = parseFloat(document.getElementById("income").value);
+      const taxRate = parseFloat(document.getElementById("taxSlab").value);
+      const taxAmount = (income * taxRate) / 100;
+
+      document.getElementById("taxResult").style.display = "block";
+      document.getElementById("taxResult").textContent = `You owe ₹${taxAmount.toLocaleString()} as tax.`;
+    }
+
+    // Submit Advice
+    function submitAdvice() {
+      document.getElementById("adviceResult").style.display = "block";
+      setTimeout(() => {
+        document.getElementById("adviceResult").style.display = "none";
+      }, 3000);
+    }
+  </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tax Evaluation & Citizen Advice</title>
+  <link id="dynamic-favicon" rel="icon" href="https://via.placeholder.com/32" type="image/png">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+    }
+    nav {
+      background: #007bff;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 10px;
+      font-size: 16px;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    select, input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      color: #fff;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .result, .about, .uses {
+      margin-top: 20px;
+      padding: 10px;
+      background: #e9f7e9;
+      color: #2e7d32;
+      border-radius: 4px;
+      display: none;
+    }
+    canvas {
+      margin-top: 20px;
+    }
+    textarea {
+      height: 100px;
+    }
+    footer {
+      text-align: center;
+      margin-top: 20px;
+      padding: 10px;
+      background: #f4f4f4;
+      font-size: 14px;
+    }
+    .laws {
+      background: #fef4e1;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    .laws ul {
+      list-style: none;
+      padding: 0;
+    }
+    .laws li {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  
+  
+
+  <!-- Main Container -->
+  <div class="container" id="main-content">
+    <h1>Tax Evaluation System</h1>
+    <h2>Evaluate Tax and GDP Impact</h2>
+
+    <!-- Tax Evaluation Form -->
+    <div class="form-group">
+      <label for="itemName">Enter Product/Service Name:</label>
+      <input type="text" id="itemName" placeholder="e.g., Bread, Luxury Car, Cigarettes" required>
+
+      <label for="category">Select Product Category:</label>
+      <select id="category">
+        <option value="essential">Essential Goods</option>
+        <option value="luxury">Luxury Goods</option>
+        <option value="harmful">Harmful Products</option>
+        <option value="neutral">Neutral Goods</option>
+        <option value="services">Services</option>
+      </select>
+
+      <button onclick="evaluateTax()">Evaluate Tax Recommendation</button>
+      <div class="result" id="evaluationResult"></div>
+    </div>
+
+    <!-- Graph Visualization -->
+    <h2>GDP Growth and Tax Visualization</h2>
+    <canvas id="gdpChart"></canvas>
+  </div>
+
+  <!-- Tax Laws Section -->
+  <div class="container laws" id="laws">
+    <h2>Important Tax Laws in India</h2>
+    <ul>
+      <li><strong>Income Tax Act, 1961:</strong> Governs the taxation of individual and corporate income.</li>
+      <li><strong>Goods and Services Tax (GST) Act, 2017:</strong> A unified tax system for indirect taxes on goods and services.</li>
+      <li><strong>Customs Act, 1962:</strong> Regulates customs duties on imports and exports.</li>
+      <li><strong>Central Excise Act, 1944:</strong> Focuses on the excise duties for manufactured goods in India.</li>
+      <li><strong>Wealth Tax Act, 1957:</strong> (Abolished in 2015) Governed the taxation of individual wealth exceeding a threshold.</li>
+      <li><strong>Taxation Laws (Amendment) Act, 2021:</strong> Amendments regarding retrospective tax changes and related provisions.</li>
+    </ul>
+  </div>
+
+  <footer>
+    &copy; 2025 Tax Evaluation System - Government of India
+  </footer>
+
+  <script>
+    // Chart Initialization
+    const gdpData = {
+      labels: ["Essential Goods", "Luxury Goods", "Harmful Products", "Neutral Goods", "Services"],
+      datasets: [
+        {
+          label: "Contribution to GDP (%)",
+          data: [30, 15, 10, 25, 20],
+          backgroundColor: ["#4caf50", "#ff9800", "#f44336", "#2196f3", "#9c27b0"],
+        },
+        {
+          label: "Recommended Tax (%)",
+          data: [5, 30, 50, 18, 12],
+          backgroundColor: ["rgba(76, 175, 80, 0.7)", "rgba(255, 152, 0, 0.7)", "rgba(244, 67, 54, 0.7)", "rgba(33, 150, 243, 0.7)", "rgba(156, 39, 176, 0.7)"],
+        },
+      ],
+    };
+
+    const ctx = document.getElementById("gdpChart").getContext("2d");
+    const gdpChart = new Chart(ctx, {
+      type: "bar",
+      data: gdpData,
+      options: { responsive: true, scales: { y: { beginAtZero: true, max: 60 } } },
+    });
+
+    // Evaluate Tax
+    function evaluateTax() {
+      const itemName = document.getElementById("itemName").value;
+      const category = document.getElementById("category").value;
+
+      let recommendation = "";
+      if (category === "essential") recommendation = "Minimal tax (5%) recommended.";
+      else if (category === "luxury") recommendation = "High tax (30%) recommended.";
+      else if (category === "harmful") recommendation = "Very high tax (50%) recommended.";
+      else recommendation = "Moderate tax (18%) recommended.";
+
+      document.getElementById("evaluationResult").style.display = "block";
+      document.getElementById("evaluationResult").textContent = `For ${itemName}: ${recommendation}`;
+    }
+
+    // Update Icon
+    function updateIcon() {
+      const iconUrl = document.getElementById("iconUrl").value;
+      if (iconUrl) {
+        document.getElementById("dynamic-favicon").href = iconUrl;
+        document.getElementById("iconResult").style.display = "block";
+        setTimeout(() => {
+          document.getElementById("iconResult").style.display = "none";
+        }, 3000);
+      }
+    }
+  </script>
+</body>
+</html>
+
